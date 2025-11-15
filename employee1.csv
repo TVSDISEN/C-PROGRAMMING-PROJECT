@@ -1,5 +1,2 @@
 ID,Name,Designation,Salary,Password,ManagerID
 72262,disen,director,1000000.00,disentvs@29,72262
-7123,suhas,manager,75000.00,suhas@15,72262
-1234,siddhu,employee,69700.00,siddhu@531,7123
-2345,abhinav,employee,90000.00,abhinav@231,7123
