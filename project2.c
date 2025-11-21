@@ -452,7 +452,7 @@ int main() {
     // Load employees and requests
     struct Employee *employees = loadFromFile(filename);
     requestsHead = loadRequests(requestFile);
-
+    printf("***************WELCOME***************\n");
     while (1) {
         int id;
         char name[50];
@@ -467,5 +467,6 @@ int main() {
             printf("Login failed. Try again.\n");
         }
     }
+    printf("******THANK YOU*********");
     return 0;
 }
