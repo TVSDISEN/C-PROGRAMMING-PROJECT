@@ -453,11 +453,15 @@ int main() {
     struct Employee *employees = loadFromFile(filename);
     requestsHead = loadRequests(requestFile);
     printf("***************WELCOME***************\n");
+    printf("******PLEASE SEE THAT ALL INFORMATION IS IN SMALL LETTERS AND ENTER 0 IN ENTER ID FORM TO EXIT FROM LOOP************\n");
     while (1) {
         int id;
         char name[50];
         printf("Enter your ID: ");
         scanf("%d", &id);
+        if (id==0){
+            break;
+        }
         getchar(); // consume leftover newline
         printf("Enter your name: ");
         fgets(name, sizeof(name), stdin);
