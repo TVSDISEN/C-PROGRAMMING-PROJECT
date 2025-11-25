@@ -34,6 +34,19 @@ int caseInsensitiveCmp(const char *a, const char *b) {
     return (unsigned char)tolower(*a) - (unsigned char)tolower(*b);
 }
 
+// Checks if password satisfies: at least one letter, one digit, and one symbol (@, $, &)
+int isValidPassword(const char *password) {
+    int hasLetter = 0, hasDigit = 0, hasSymbol = 0;
+    const char *symbols = "@$&";
+    while (*password) {
+        if (isalpha(*password)) hasLetter = 1;
+        else if (isdigit(*password)) hasDigit = 1;
+        else if (strchr(symbols, *password)) hasSymbol = 1;
+        password++;
+    }
+    return hasLetter && hasDigit && hasSymbol;
+}
+
 // Removes newline character from end of string if present
 void trimNewline(char *str);
 
@@ -67,6 +80,9 @@ int Login_handler(int id, char *name, const char *filename, struct Employee **pr
 // Interactive function to add new employee based on logged-in user's role
 // Checks if the managerId assigned to the new employee exists and is a manager
 void addEmployeeInteractive(struct Employee **head, int loggedInUserId, char *loggedInDesignation);
+
+// Allows any logged-in user to change their password with validation
+void changePassword(struct Employee *head, int empId);
 
 // Handles logged-in user session and menu options based on role
 void workholder(int userId, char name[], char designation[], struct Employee **head);
@@ -166,7 +182,7 @@ void deleteEmployee(struct Employee **head, int id, int requesterId, char *reque
         prev = temp;
         temp = temp->next;
     }
-    printf("Employee or Manager with ID %d not found.\n", id);
+    printf("Employee or Manager with ID %d not found.\n");
 }
 
 void displayEmployees(struct Employee *head) {
@@ -307,11 +323,44 @@ void addEmployeeInteractive(struct Employee **head, int loggedInUserId, char *lo
 
     printf("Enter salary: ");
     scanf("%f", &salary);
-    printf("Enter password: ");
-    scanf("%s", password);
+
+    // Password input and validation loop
+    while (1) {
+        printf("Enter password (must contain at least one letter, one digit, and one symbol @,$,&): ");
+        scanf("%s", password);
+        if (isValidPassword(password)) {
+            break;
+        } else {
+            printf("Invalid password, please try again.\n");
+        }
+    }
+    
     struct Employee *newEmp = createEmployee(id, name, designation, salary, password, managerId);
     addEmployee(head, newEmp);
     printf("Employee added successfully.\n");
+}
+
+// Allows any logged-in user to change their password with validation
+void changePassword(struct Employee *head, int empId) {
+    char newPassword[20];
+    struct Employee *emp = head;
+    while (emp != NULL) {
+        if (emp->id == empId) {
+            while (1) {
+                printf("Enter new password (must contain at least one letter, one digit, and one symbol @,$,&): ");
+                scanf("%19s", newPassword);
+                if (isValidPassword(newPassword)) {
+                    strcpy(emp->password, newPassword);
+                    printf("Password changed successfully.\n");
+                    return;
+                } else {
+                    printf("Password does not meet criteria, please try again.\n");
+                }
+            }
+        }
+        emp = emp->next;
+    }
+    printf("Employee record not found. Password not changed.\n");
 }
 
 
@@ -426,16 +475,19 @@ void workholder(int userId, char name[], char designation[], struct Employee **h
             printf("2. Add Manager Or Employee\n");
             printf("3. Delete Manager\n");
             printf("4. Review Update Requests\n");
+            printf("5. Change Password\n");
         }
         else if (caseInsensitiveCmp(designation, "manager") == 0) {
             printf("1. View Your Employees\n");
             printf("2. Add Employee\n");
             printf("3. Delete Employee\n");
             printf("4. Review Update Requests\n");
+            printf("5. Change Password\n");
         }
         else if (caseInsensitiveCmp(designation, "employee") == 0) {
             printf("1. View Your Details\n");
             printf("2. Submit Update Request\n");
+            printf("3. Change Password\n");
         }
         else {
             printf("Invalid designation.\n");
@@ -477,14 +529,19 @@ void workholder(int userId, char name[], char designation[], struct Employee **h
                 scanf("%d", &delId);
                 deleteEmployee(head, delId, userId, designation);
             }
-            else
+            else {
                 printf("You do not have permission to delete employees.\n");
+            }
             break;
         case 4:
             if (caseInsensitiveCmp(designation, "director") == 0 || caseInsensitiveCmp(designation, "manager") == 0)
                 viewAndProcessRequests(&requestsHead, head, userId, designation);
             else
                 printf("Invalid choice.\n");
+            break;
+        case 5:
+            // Change password for any logged-in user
+            changePassword(*head, userId);
             break;
         case 0:
             printf("Saving data and logging out...\n");
@@ -508,7 +565,7 @@ int main() {
     struct Employee *employees = loadFromFile(filename);
     requestsHead = loadRequests(requestFile);
     printf("***************WELCOME***************\n");
-    printf("****** ENTER 0 IN ENTER ID FORM TO EXIT FROM LOOP************\n");
+    printf("******ENTER 0 IN ENTER ID FORM TO EXIT FROM LOOP************\n");
     while (1) {
         int id;
         char name[50];
