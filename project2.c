@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 
-// Employee Struct
+// Employee Struct to hold employee details including manager relationship
 struct Employee {
     int id;
     char name[50];
@@ -14,7 +14,7 @@ struct Employee {
     struct Employee *next;
 };
 
-// UpdateRequest Struct
+// UpdateRequest Struct to hold requests for updating employee data
 struct UpdateRequest {
     int employeeId;
     char field[30];
@@ -24,21 +24,55 @@ struct UpdateRequest {
     struct UpdateRequest *next;
 };
 
-// Function declarations
+// Compares two strings case-insensitively. Returns 0 if they are equal.
+int caseInsensitiveCmp(const char *a, const char *b) {
+    while (*a && *b) {
+        if (tolower(*a) != tolower(*b))
+            return (unsigned char)tolower(*a) - (unsigned char)tolower(*b);
+        a++; b++;
+    }
+    return (unsigned char)tolower(*a) - (unsigned char)tolower(*b);
+}
+
+// Removes newline character from end of string if present
 void trimNewline(char *str);
+
+// Creates a new employee node with given data
 struct Employee* createEmployee(int id, char *name, char *designation, float salary, char *password, int managerId);
+
+// Adds a new employee node to the end of the linked list
 void addEmployee(struct Employee **head, struct Employee *newEmp);
+
+// Deletes an employee or manager from the list based on requester permissions
 void deleteEmployee(struct Employee **head, int id, int requesterId, char *requesterRole);
+
+// Displays all employees in the list in tabular form
 void displayEmployees(struct Employee *head);
+
+// Displays employees who report to a specific manager
 void displayEmployeesUnderManager(struct Employee *head, int managerId);
+
+// Displays details of a specific employee by id
 void displayEmployee(struct Employee *head, int id);
+
+// Saves the list of employees to a CSV file
 void saveToFile(struct Employee *head, const char *filename);
+
+// Loads employees from a CSV file into a linked list
 struct Employee* loadFromFile(const char *filename);
+
+// Handles user login by verifying id, name, password then initiating user session
 int Login_handler(int id, char *name, const char *filename, struct Employee **present);
+
+// Interactive function to add new employee based on logged-in user's role
+// Checks if the managerId assigned to the new employee exists and is a manager
 void addEmployeeInteractive(struct Employee **head, int loggedInUserId, char *loggedInDesignation);
+
+// Handles logged-in user session and menu options based on role
 void workholder(int userId, char name[], char designation[], struct Employee **head);
 
-// UpdateRequest functions
+
+// UpdateRequest function declarations
 struct UpdateRequest* createRequest(int empId, char *field, char *value, int managerId);
 void addRequest(struct UpdateRequest **head, struct UpdateRequest *newReq);
 struct UpdateRequest* loadRequests(const char *filename);
@@ -49,7 +83,7 @@ void viewAndProcessRequests(struct UpdateRequest **reqHead, struct Employee **em
 // Global head pointer for update requests
 struct UpdateRequest *requestsHead = NULL;
 
-// Helper function to find managerId of an employee
+// Helper function to find managerId of an employee by id
 int findManagerId(struct Employee *head, int empId) {
     struct Employee *temp = head;
     while (temp != NULL) {
@@ -58,6 +92,19 @@ int findManagerId(struct Employee *head, int empId) {
     }
     return -1; // not found
 }
+
+// Helper to verify if a given managerId exists and is designated "manager"
+int managerExists(struct Employee *head, int managerId) {
+    struct Employee *temp = head;
+    while (temp != NULL) {
+        if (temp->id == managerId && caseInsensitiveCmp(temp->designation, "manager") == 0) {
+            return 1; // manager found
+        }
+        temp = temp->next;
+    }
+    return 0; // manager not found
+}
+
 
 // ----------- Implementations -------------
 
@@ -98,13 +145,13 @@ void deleteEmployee(struct Employee **head, int id, int requesterId, char *reque
     struct Employee *temp = *head, *prev = NULL;
     while (temp != NULL) {
         if (temp->id == id) {
-            if (strcmp(requesterRole, "director") == 0 && strcmp(temp->designation, "manager") == 0) {
+            if (strcmp(requesterRole, "director") == 0 && caseInsensitiveCmp(temp->designation, "manager") == 0) {
                 if (prev == NULL) *head = temp->next;
                 else prev->next = temp->next;
                 free(temp);
                 printf("Manager with ID %d deleted successfully.\n", id);
                 return;
-            } else if (strcmp(requesterRole, "manager") == 0 && strcmp(temp->designation, "employee") == 0 && temp->managerId == requesterId) {
+            } else if (strcmp(requesterRole, "manager") == 0 && caseInsensitiveCmp(temp->designation, "employee") == 0 && temp->managerId == requesterId) {
                 if (prev == NULL) *head = temp->next;
                 else prev->next = temp->next;
                 free(temp);
@@ -184,7 +231,7 @@ struct Employee* loadFromFile(const char *filename) {
     return head;
 }
 
-// Updated Login_handler to use pointer to pointer for employees
+// Updated Login_handler to be case-insensitive for name comparison
 int Login_handler(int id, char *name, const char *filename, struct Employee **present) {
     if (*present == NULL) {
         *present = loadFromFile(filename);
@@ -196,7 +243,7 @@ int Login_handler(int id, char *name, const char *filename, struct Employee **pr
     struct Employee *temp = *present;
     char choice;
     while (temp != NULL) {
-        if (temp->id == id && strcmp(temp->name, name) == 0) {
+        if (temp->id == id && caseInsensitiveCmp(temp->name, name) == 0) {
             char passw[20];
             do {
                 printf("USER FOUND! \nENTER PASSWORD HERE: ");
@@ -223,8 +270,9 @@ int Login_handler(int id, char *name, const char *filename, struct Employee **pr
     return 0;
 }
 
+// Adds a new employee interactively, validating the manager ID for existence and role
 void addEmployeeInteractive(struct Employee **head, int loggedInUserId, char *loggedInDesignation) {
-    if (strcmp(loggedInDesignation, "employee") == 0) {
+    if (caseInsensitiveCmp(loggedInDesignation, "employee") == 0) {
         printf("You don't have permission to add an employee.\n");
         return;
     }
@@ -232,25 +280,31 @@ void addEmployeeInteractive(struct Employee **head, int loggedInUserId, char *lo
     char name[50], designation[30], password[20];
     float salary;
     int managerId;
+
     printf("Enter new employee ID: ");
     scanf("%d", &id);
     printf("Enter new employee name: ");
     scanf("%s", name);
-    if (strcmp(loggedInDesignation, "director") == 0) {
+
+    if (caseInsensitiveCmp(loggedInDesignation, "director") == 0) {
         printf("Enter designation (manager/employee): ");
         scanf("%s", designation);
-        if (strcmp(designation, "manager") == 0) {
+        if (caseInsensitiveCmp(designation, "manager") == 0) {
             managerId = loggedInUserId;
-        }
-        else {
+        } else {
             printf("Enter manager ID for this employee: ");
             scanf("%d", &managerId);
+            // Validate if managerId exists and is a manager
+            if (!managerExists(*head, managerId)) {
+                printf("Manager ID not found or invalid. Cannot add employee.\n");
+                return;
+            }
         }
-    }
-    else if (strcmp(loggedInDesignation, "manager") == 0) {
+    } else if (caseInsensitiveCmp(loggedInDesignation, "manager") == 0) {
         strcpy(designation, "employee");
         managerId = loggedInUserId;
     }
+
     printf("Enter salary: ");
     scanf("%f", &salary);
     printf("Enter password: ");
@@ -259,6 +313,7 @@ void addEmployeeInteractive(struct Employee **head, int loggedInUserId, char *lo
     addEmployee(head, newEmp);
     printf("Employee added successfully.\n");
 }
+
 
 // --------- UpdateRequest Functions ---------
 
@@ -329,8 +384,8 @@ void viewAndProcessRequests(struct UpdateRequest **reqHead, struct Employee **em
     struct UpdateRequest *temp = *reqHead;
     int found = 0;
     while (temp != NULL) {
-        if ((strcmp(designation, "manager") == 0 && temp->managerId == reviewerId && strcmp(temp->status, "pending") == 0) ||
-            (strcmp(designation, "director") == 0 && strcmp(temp->status, "pending") == 0)) {
+        if ((caseInsensitiveCmp(designation, "manager") == 0 && temp->managerId == reviewerId && caseInsensitiveCmp(temp->status, "pending") == 0) ||
+            (caseInsensitiveCmp(designation, "director") == 0 && caseInsensitiveCmp(temp->status, "pending") == 0)) {
 
             printf("\nRequest for Employee ID: %d\nField: %s\nNew Value: %s\nStatus: %s\n",
                    temp->employeeId, temp->field, temp->newValue, temp->status);
@@ -340,8 +395,8 @@ void viewAndProcessRequests(struct UpdateRequest **reqHead, struct Employee **em
                 struct Employee *emp = *empHead;
                 while (emp != NULL) {
                     if (emp->id == temp->employeeId) {
-                        if (strcmp(temp->field, "name") == 0) strcpy(emp->name, temp->newValue);
-                        else if (strcmp(temp->field, "salary") == 0) emp->salary = atof(temp->newValue);
+                        if (caseInsensitiveCmp(temp->field, "name") == 0) strcpy(emp->name, temp->newValue);
+                        else if (caseInsensitiveCmp(temp->field, "salary") == 0) emp->salary = atof(temp->newValue);
                         strcpy(temp->status, "approved");
                         printf("Request approved and record updated.\n");
                         found = 1;
@@ -360,26 +415,25 @@ void viewAndProcessRequests(struct UpdateRequest **reqHead, struct Employee **em
     if (!found) printf("No pending requests to review.\n");
 }
 
-// ------------- Modified workholder to handle requests --------------
-
+// Handles user commands and menu options based on their role during session
 void workholder(int userId, char name[], char designation[], struct Employee **head) {
     int choice;
     printf("\nWelcome %s! You are logged in as %s.\n", name, designation);
     while (1) {
         printf("\nSelect your operation:\n");
-        if (strcmp(designation, "director") == 0) {
+        if (caseInsensitiveCmp(designation, "director") == 0) {
             printf("1. View All Employees and Managers\n");
             printf("2. Add Manager Or Employee\n");
             printf("3. Delete Manager\n");
             printf("4. Review Update Requests\n");
         }
-        else if (strcmp(designation, "manager") == 0) {
+        else if (caseInsensitiveCmp(designation, "manager") == 0) {
             printf("1. View Your Employees\n");
             printf("2. Add Employee\n");
             printf("3. Delete Employee\n");
             printf("4. Review Update Requests\n");
         }
-        else if (strcmp(designation, "employee") == 0) {
+        else if (caseInsensitiveCmp(designation, "employee") == 0) {
             printf("1. View Your Details\n");
             printf("2. Submit Update Request\n");
         }
@@ -393,17 +447,17 @@ void workholder(int userId, char name[], char designation[], struct Employee **h
 
         switch (choice) {
         case 1:
-            if (strcmp(designation, "director") == 0)
+            if (caseInsensitiveCmp(designation, "director") == 0)
                 displayEmployees(*head);
-            else if (strcmp(designation, "manager") == 0)
+            else if (caseInsensitiveCmp(designation, "manager") == 0)
                 displayEmployeesUnderManager(*head, userId);
-            else if (strcmp(designation, "employee") == 0)
+            else if (caseInsensitiveCmp(designation, "employee") == 0)
                 displayEmployee(*head, userId);
             break;
         case 2:
-            if (strcmp(designation, "manager") == 0 || strcmp(designation, "director") == 0)
+            if (caseInsensitiveCmp(designation, "manager") == 0 || caseInsensitiveCmp(designation, "director") == 0)
                 addEmployeeInteractive(head, userId, designation);
-            else if (strcmp(designation, "employee") == 0) {
+            else if (caseInsensitiveCmp(designation, "employee") == 0) {
                 int mgrId = findManagerId(*head, userId);
                 submitUpdateRequest(&requestsHead, userId, mgrId);
             }
@@ -411,13 +465,13 @@ void workholder(int userId, char name[], char designation[], struct Employee **h
                 printf("You do not have permission to add employees.\n");
             break;
         case 3:
-            if (strcmp(designation, "director") == 0) {
+            if (caseInsensitiveCmp(designation, "director") == 0) {
                 printf("Enter Manager or Employee ID to delete: ");
                 int delId;
                 scanf("%d", &delId);
                 deleteEmployee(head, delId, userId, designation);
             }
-            else if (strcmp(designation, "manager") == 0) {
+            else if (caseInsensitiveCmp(designation, "manager") == 0) {
                 printf("Enter Employee ID to delete: ");
                 int delId;
                 scanf("%d", &delId);
@@ -427,7 +481,7 @@ void workholder(int userId, char name[], char designation[], struct Employee **h
                 printf("You do not have permission to delete employees.\n");
             break;
         case 4:
-            if (strcmp(designation, "director") == 0 || strcmp(designation, "manager") == 0)
+            if (caseInsensitiveCmp(designation, "director") == 0 || caseInsensitiveCmp(designation, "manager") == 0)
                 viewAndProcessRequests(&requestsHead, head, userId, designation);
             else
                 printf("Invalid choice.\n");
@@ -445,15 +499,16 @@ void workholder(int userId, char name[], char designation[], struct Employee **h
 }
 
 // ------------- main function -------------
+// Starts the program, handles login loop until exit is requested
 int main() {
     const char *filename = "employee1.csv";
     const char *requestFile = "requests.csv";
 
-    // Load employees and requests
+    // Load employees and requests from files
     struct Employee *employees = loadFromFile(filename);
     requestsHead = loadRequests(requestFile);
     printf("***************WELCOME***************\n");
-    printf("******PLEASE SEE THAT ALL INFORMATION IS IN SMALL LETTERS AND ENTER 0 IN ENTER ID FORM TO EXIT FROM LOOP************\n");
+    printf("****** ENTER 0 IN ENTER ID FORM TO EXIT FROM LOOP************\n");
     while (1) {
         int id;
         char name[50];
