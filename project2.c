@@ -26,12 +26,12 @@ struct UpdateRequest {
 
 // Compares two strings case-insensitively. Returns 0 if they are equal.
 int caseInsensitiveCmp(const char *a, const char *b) {
-    while (*a && *b) {
-        if (tolower(*a) != tolower(*b))
-            return (unsigned char)tolower(*a) - (unsigned char)tolower(*b);
-        a++; b++;
-    }
-    return (unsigned char)tolower(*a) - (unsigned char)tolower(*b);
+    char copyA[100],copyB[100];
+    strcpy(copyA,a);
+    strcpy(copyB,b);
+    for (int i=0;copyA[i];i++)copyA[i]=tolower(copyA[i]);
+    for (int i=0;copyB[i];i++) copyB[i]=tolower(copyB[i]);
+    return strcmp(copyA,copyB);
 }
 
 // Checks if password satisfies: at least one letter, one digit, and one symbol (@, $, &)
