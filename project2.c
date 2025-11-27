@@ -6,7 +6,7 @@
 // Employee Struct to hold employee details including manager relationship
 struct Employee {
     int id;
-    char name[50];                  
+    char name[50];                          //BY SUHAS
     char designation[30];
     float salary;
     char password[20];
@@ -33,7 +33,7 @@ int isValidName(const char *name) {
     return 1;
 }
 int caseInsensitiveCmp(const char *k,const char *l);
-// NEW: Validates designation is exactly "manager" or "employee"
+// NEW: Validates designation is exactly "manager" or "employee"                    //BY DISEN
 int isValidDesignation(const char *desig) {
     return caseInsensitiveCmp(desig, "manager") == 0 || 
            caseInsensitiveCmp(desig, "employee") == 0;
@@ -147,7 +147,7 @@ struct Employee* createEmployee(int id, char *name, char *designation, float sal
     struct Employee *newEmp = (struct Employee *)malloc(sizeof(struct Employee));
     if (!newEmp) {
         printf("Memory allocation failed\n");
-        return NULL;
+        return NULL;                                          //BY SUHAS
     }
     newEmp->id = id;
     strcpy(newEmp->name, name);                                  
@@ -267,7 +267,7 @@ int Login_handler(int id, char *name, const char *filename, struct Employee **pr
         if (!*present) {
             printf("No employees loaded. Check the CSV file.\n");
             return 0;
-        }
+        }                                                                          //BY DISEN
     }
     struct Employee *temp = *present;                        
     char choice;
@@ -405,7 +405,7 @@ struct UpdateRequest* createRequest(int empId, char *field, char *value, int man
     newReq->employeeId = empId;
     strcpy(newReq->field, field);
     strcpy(newReq->newValue, value);
-    strcpy(newReq->status, "pending");
+    strcpy(newReq->status, "pending");                       //BY SUSHEEL
     newReq->managerId = managerId;
     newReq->next = NULL;
     return newReq;
@@ -520,7 +520,7 @@ void workholder(int userId, char name[], char designation[], struct Employee **h
             printf("3. Change Password\n");
         }
         else {
-            printf("Invalid designation.\n");
+            printf("Invalid designation.\n");                         //BY DISEN
             return;
         }
         printf("0. Logout\n");
