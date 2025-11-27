@@ -503,7 +503,7 @@ void workholder(int userId, char name[], char designation[], struct Employee **h
         if (caseInsensitiveCmp(designation, "director") == 0) {
             printf("1. View All Employees and Managers\n");
             printf("2. Add Manager Or Employee\n");                           
-            printf("3. Delete Manager\n");
+            printf("3. Delete Manager Or Employee\n");
             printf("4. Review Update Requests\n");
             printf("5. Change Password\n");
         }
