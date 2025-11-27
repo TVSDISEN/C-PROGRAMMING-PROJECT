@@ -6,7 +6,7 @@
 // Employee Struct to hold employee details including manager relationship
 struct Employee {
     int id;
-    char name[50];                                  // BY SUHAS
+    char name[50];                  
     char designation[30];
     float salary;
     char password[20];
@@ -18,18 +18,33 @@ struct Employee {
 struct UpdateRequest {
     int employeeId;
     char field[30];
-    char newValue[50];                                // BY SUHAS
+    char newValue[50];                
     char status[20];
     int managerId;
     struct UpdateRequest *next;
 };
+
+// NEW: Validates if name contains only letters (no numbers/special chars)
+int isValidName(const char *name) {
+    while (*name) {
+        if (!isalpha(*name)) return 0;  // Must be only letters
+        name++;
+    }
+    return 1;
+}
+int caseInsensitiveCmp(const char *k,const char *l);
+// NEW: Validates designation is exactly "manager" or "employee"
+int isValidDesignation(const char *desig) {
+    return caseInsensitiveCmp(desig, "manager") == 0 || 
+           caseInsensitiveCmp(desig, "employee") == 0;
+}
 
 // Compares two strings case-insensitively. Returns 0 if they are equal.
 int caseInsensitiveCmp(const char *a, const char *b) {
     char copyA[100],copyB[100];
     strcpy(copyA,a);
     strcpy(copyB,b);
-    for (int i=0;copyA[i];i++)copyA[i]=tolower(copyA[i]);                 //BY DISEN
+    for (int i=0;copyA[i];i++)copyA[i]=tolower(copyA[i]);                 
     for (int i=0;copyB[i];i++) copyB[i]=tolower(copyB[i]);
     return strcmp(copyA,copyB);
 }
@@ -39,7 +54,7 @@ int isValidPassword(const char *password) {
     int hasLetter = 0, hasDigit = 0, hasSymbol = 0;
     const char *symbols = "@$&";
     while (*password) {
-        if (isalpha(*password)) hasLetter = 1;                                       // BY DISEN
+        if (isalpha(*password)) hasLetter = 1;                               
         else if (isdigit(*password)) hasDigit = 1;
         else if (strchr(symbols, *password)) hasSymbol = 1;
         password++;
@@ -87,7 +102,6 @@ void changePassword(struct Employee *head, int empId);
 // Handles logged-in user session and menu options based on role
 void workholder(int userId, char name[], char designation[], struct Employee **head);
 
-
 // UpdateRequest function declarations
 struct UpdateRequest* createRequest(int empId, char *field, char *value, int managerId);
 void addRequest(struct UpdateRequest **head, struct UpdateRequest *newReq);
@@ -103,7 +117,7 @@ struct UpdateRequest *requestsHead = NULL;
 int findManagerId(struct Employee *head, int empId) {
     struct Employee *temp = head;
     while (temp != NULL) {
-        if (temp->id == empId) return temp->managerId;                          //BY DISEN
+        if (temp->id == empId) return temp->managerId;                          
         temp = temp->next;
     }
     return -1; // not found
@@ -112,7 +126,7 @@ int findManagerId(struct Employee *head, int empId) {
 // Helper to verify if a given managerId exists and is designated "manager"
 int managerExists(struct Employee *head, int managerId) {
     struct Employee *temp = head;
-    while (temp != NULL) {                                                        //BY DISEN
+    while (temp != NULL) {                                                
         if (temp->id == managerId && caseInsensitiveCmp(temp->designation, "manager") == 0) {
             return 1; // manager found
         }
@@ -121,13 +135,12 @@ int managerExists(struct Employee *head, int managerId) {
     return 0; // manager not found
 }
 
-
 // ----------- Implementations -------------
 
 void trimNewline(char *str) {
     size_t len = strlen(str);
     if(len > 0 && str[len-1] == '\n')
-        str[len-1] = '\0';                                       //BY SUHAS
+        str[len-1] = '\0';                               
 }
 
 struct Employee* createEmployee(int id, char *name, char *designation, float salary, char *password, int managerId) {
@@ -137,7 +150,7 @@ struct Employee* createEmployee(int id, char *name, char *designation, float sal
         return NULL;
     }
     newEmp->id = id;
-    strcpy(newEmp->name, name);                                          //BY SUHAS
+    strcpy(newEmp->name, name);                                  
     strcpy(newEmp->designation, designation);
     newEmp->salary = salary;
     strcpy(newEmp->password, password);
@@ -152,7 +165,7 @@ void addEmployee(struct Employee **head, struct Employee *newEmp) {
     } else {
         struct Employee *temp = *head;
         while (temp->next != NULL)
-            temp = temp->next;                                    //BY SUHAS
+            temp = temp->next;                            
         temp->next = newEmp;
     }
 }
@@ -164,7 +177,7 @@ void deleteEmployee(struct Employee **head, int id, int requesterId, char *reque
             if (strcmp(requesterRole, "director") == 0 && caseInsensitiveCmp(temp->designation, "manager") == 0) {
                 if (prev == NULL) *head = temp->next;
                 else prev->next = temp->next;
-                free(temp);                                                         //BY SUHAS
+                free(temp);                                             
                 printf("Manager with ID %d deleted successfully.\n", id);
                 return;
             } else if (strcmp(requesterRole, "manager") == 0 && caseInsensitiveCmp(temp->designation, "employee") == 0 && temp->managerId == requesterId) {
@@ -186,7 +199,7 @@ void deleteEmployee(struct Employee **head, int id, int requesterId, char *reque
 }
 
 void displayEmployees(struct Employee *head) {
-    printf("ID\tName\t\tDesignation\tSalary\tManagerID\n");                           //BY SUHAS
+    printf("ID\tName\t\tDesignation\tSalary\tManagerID\n");                   
     printf("------------------------------------------------\n");
     while (head != NULL) {
         printf("%d\t%-15s%-12s%.2f\t%d\n", head->id, head->name, head->designation, head->salary, head->managerId);
@@ -197,7 +210,7 @@ void displayEmployees(struct Employee *head) {
 void displayEmployeesUnderManager(struct Employee *head, int managerId) {
     printf("ID\tName\t\tDesignation\tSalary\n");
     printf("-----------------------------------------\n");
-    while (head != NULL) {                                                 //BY SUHAS
+    while (head != NULL) {                                          
         if (head->managerId == managerId)
             printf("%d\t%-15s%-12s%.2f\n", head->id, head->name, head->designation, head->salary);
         head = head->next;
@@ -209,7 +222,7 @@ void displayEmployee(struct Employee *head, int id) {
         if (head->id == id) {
             printf("\nYour Details:\nID: %d\nName: %s\nDesignation: %s\nSalary: %.2f\nManager ID: %d\n",
                    head->id, head->name, head->designation, head->salary, head->managerId);
-            return;                                      //BY SUHAS
+            return;                              
         }
         head = head->next;
     }
@@ -219,14 +232,14 @@ void displayEmployee(struct Employee *head, int id) {
 void saveToFile(struct Employee *head, const char *filename) {
     FILE *file = fopen(filename, "w");
     if (!file) {
-        printf("Failed to open %s for writing\n", filename);                       //BY SUHAS
+        printf("Failed to open %s for writing\n", filename);                       
         return;
     }
     fprintf(file, "ID,Name,Designation,Salary,Password,ManagerID\n");
     while (head != NULL) {
         fprintf(file, "%d,%s,%s,%.2f,%s,%d\n", head->id, head->name, head->designation, head->salary, head->password, head->managerId);
         head = head->next;
-    }                                                                           //BY SUHAS
+    }                                           
     fclose(file);
 }
 
@@ -236,7 +249,7 @@ struct Employee* loadFromFile(const char *filename) {
     char header[256];
     fgets(header, sizeof(header), file); // skip header
     struct Employee *head = NULL;
-    int id, managerId;                                                       //BY SUHAS
+    int id, managerId;                               
     float salary;
     char name[50], designation[30], password[20];
     while (fscanf(file, "%d,%49[^,],%29[^,],%f,%19[^,],%d\n", &id, name, designation, &salary, password, &managerId) == 6) {
@@ -256,7 +269,7 @@ int Login_handler(int id, char *name, const char *filename, struct Employee **pr
             return 0;
         }
     }
-    struct Employee *temp = *present;                                        //BY DISEN
+    struct Employee *temp = *present;                        
     char choice;
     while (temp != NULL) {
         if (temp->id == id && caseInsensitiveCmp(temp->name, name) == 0) {
@@ -286,7 +299,7 @@ int Login_handler(int id, char *name, const char *filename, struct Employee **pr
     return 0;
 }
 
-// Adds a new employee interactively, validating the manager ID for existence and role
+// MODIFIED: Added name validation (only letters) and strict designation validation
 void addEmployeeInteractive(struct Employee **head, int loggedInUserId, char *loggedInDesignation) {
     if (caseInsensitiveCmp(loggedInDesignation, "employee") == 0) {
         printf("You don't have permission to add an employee.\n");
@@ -299,14 +312,32 @@ void addEmployeeInteractive(struct Employee **head, int loggedInUserId, char *lo
 
     printf("Enter new employee ID: ");
     scanf("%d", &id);
-    printf("Enter new employee name: ");
-    scanf("%s", name);
+    
+    // MODIFIED: Name validation loop - only letters allowed
+    while (1) {
+        printf("Enter new employee name (letters only): ");
+        scanf("%s", name);
+        if (isValidName(name)) {
+            break;
+        } else {
+            printf("Invalid name! Name must contain only letters (A-Z, a-z). Try again.\n");
+        }
+    }
 
     if (caseInsensitiveCmp(loggedInDesignation, "director") == 0) {
-        printf("Enter designation (manager/employee): ");
-        scanf("%s", designation);
+        // MODIFIED: Strict validation for designation input
+        while (1) {
+            printf("Enter designation (type exactly 'manager' or 'employee'): ");
+            scanf("%s", designation);
+            if (isValidDesignation(designation)) {
+                break;
+            } else {
+                printf("Invalid designation! Must be exactly 'manager' or 'employee'. Try again.\n");
+            }
+        }
+        
         if (caseInsensitiveCmp(designation, "manager") == 0) {
-            managerId = loggedInUserId;                                              //BY DISEN
+            managerId = loggedInUserId;                              
         } else {
             printf("Enter manager ID for this employee: ");
             scanf("%d", &managerId);
@@ -344,7 +375,7 @@ void addEmployeeInteractive(struct Employee **head, int loggedInUserId, char *lo
 void changePassword(struct Employee *head, int empId) {
     char newPassword[20];
     struct Employee *emp = head;
-    while (emp != NULL) {                                         //BY DISEN
+    while (emp != NULL) {                                   
         if (emp->id == empId) {
             while (1) {
                 printf("Enter new password (must contain at least one letter, one digit, and one symbol @,$,&): ");
@@ -363,7 +394,6 @@ void changePassword(struct Employee *head, int empId) {
     printf("Employee record not found. Password not changed.\n");
 }
 
-
 // --------- UpdateRequest Functions ---------
 
 struct UpdateRequest* createRequest(int empId, char *field, char *value, int managerId) {
@@ -371,7 +401,7 @@ struct UpdateRequest* createRequest(int empId, char *field, char *value, int man
     if (!newReq) {
         printf("Memory allocation failed for new request.\n");
         return NULL;
-    }                                  //BY SUSHEEL
+    }                              
     newReq->employeeId = empId;
     strcpy(newReq->field, field);
     strcpy(newReq->newValue, value);
@@ -385,7 +415,7 @@ void addRequest(struct UpdateRequest **head, struct UpdateRequest *newReq) {
     if (*head == NULL) {
         *head = newReq;
     } else {
-        struct UpdateRequest *temp = *head;                                //BY SUSHEEL
+        struct UpdateRequest *temp = *head;                        
         while (temp->next != NULL) temp = temp->next;
         temp->next = newReq;
     }
@@ -395,7 +425,7 @@ struct UpdateRequest* loadRequests(const char *filename) {
     FILE *file = fopen(filename, "r");
     if (!file) return NULL;
     struct UpdateRequest *head = NULL;
-    int empId, managerId;                                                       //BY SUSHEEL
+    int empId, managerId;                                           
     char field[30], value[50], status[20];
     while (fscanf(file, "%d,%29[^,],%49[^,],%19[^,],%d\n", &empId, field, value, status, &managerId) == 5) {
         struct UpdateRequest *newReq = createRequest(empId, field, value, managerId);
@@ -414,13 +444,13 @@ void saveRequests(struct UpdateRequest *head, const char *filename) {
         fprintf(file, "%d,%s,%s,%s,%d\n", head->employeeId, head->field, head->newValue, head->status, head->managerId);
         head = head->next;
     }
-    fclose(file);                                    //BY SUSHEEL
+    fclose(file);                            
 }
 
 void submitUpdateRequest(struct UpdateRequest **reqHead, int empId, int managerId) {
     char field[30], value[50];
     printf("Enter the field you want to update (name/salary): ");
-    scanf("%s", field);                                                //BY SUSHEEL
+    scanf("%s", field);                                
     printf("Enter the new value: ");
     scanf("%s", value);
     struct UpdateRequest *newReq = createRequest(empId, field, value, managerId);
@@ -441,7 +471,7 @@ void viewAndProcessRequests(struct UpdateRequest **reqHead, struct Employee **em
             printf("Approve (1), Reject (0), Skip (2): ");
             int choice; scanf("%d", &choice);
             if (choice == 1) {
-                struct Employee *emp = *empHead;                                        //BY SUSHEEL
+                struct Employee *emp = *empHead;                                
                 while (emp != NULL) {
                     if (emp->id == temp->employeeId) {
                         if (caseInsensitiveCmp(temp->field, "name") == 0) strcpy(emp->name, temp->newValue);
@@ -472,7 +502,7 @@ void workholder(int userId, char name[], char designation[], struct Employee **h
         printf("\nSelect your operation:\n");
         if (caseInsensitiveCmp(designation, "director") == 0) {
             printf("1. View All Employees and Managers\n");
-            printf("2. Add Manager Or Employee\n");                                   //BY DISEN
+            printf("2. Add Manager Or Employee\n");                           
             printf("3. Delete Manager\n");
             printf("4. Review Update Requests\n");
             printf("5. Change Password\n");
@@ -556,7 +586,6 @@ void workholder(int userId, char name[], char designation[], struct Employee **h
 }
 
 // ------------- main function -------------
-// Starts the program, handles login loop until exit is requested
 int main() {
     const char *filename = "employee1.csv";
     const char *requestFile = "requests.csv";
