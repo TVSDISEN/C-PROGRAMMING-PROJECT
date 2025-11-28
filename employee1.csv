@@ -1,3 +1,4 @@
 ID,Name,Designation,Salary,Password,ManagerID
 72262,disen,director,1000000.00,disen@29,72262
-
+5342,kraven,manager,75000.00,kraven@123,72262
+1234,suhas,employee,50000.00,suhas@76,5342
